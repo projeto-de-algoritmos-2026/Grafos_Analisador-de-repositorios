@@ -1,9 +1,10 @@
 import os
 import re
+import shutil
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional, Tuple
 
 import requests
 
@@ -27,9 +28,32 @@ def _download_zip(url: str, dest: Path) -> None:
                 handle.write(chunk)
 
 
-def fetch_repository(source: str, dest_dir: Optional[Path] = None) -> Path:
+def _cleanup_old_temporary_repos(prefix: str = "pygrapher_") -> None:
+    temp_root = Path(tempfile.gettempdir())
+    for candidate in temp_root.iterdir():
+        if candidate.is_dir() and candidate.name.startswith(prefix):
+            try:
+                shutil.rmtree(candidate)
+            except OSError:
+                continue
+
+
+def cleanup_repository(temp_dir: Path) -> None:
+    if temp_dir.exists() and temp_dir.is_dir():
+        shutil.rmtree(temp_dir)
+
+
+def fetch_repository(
+    source: str,
+    dest_dir: Optional[Path] = None,
+    status_callback: Optional[Callable[[str], None]] = None,
+) -> Tuple[Path, Optional[Path]]:
     """Fetch a GitHub repository zip or return a local directory path."""
+    if status_callback:
+        status_callback("[1/4] Baixando repositório...")
+
     if dest_dir is None:
+        _cleanup_old_temporary_repos()
         dest_dir = Path(tempfile.mkdtemp(prefix="pygrapher_"))
     else:
         dest_dir = Path(dest_dir).resolve()
@@ -39,7 +63,7 @@ def fetch_repository(source: str, dest_dir: Optional[Path] = None) -> Path:
     if source_path.exists():
         if not source_path.is_dir():
             raise ValueError(f"Local path is not a directory: {source}")
-        return source_path.resolve()
+        return source_path.resolve(), None
 
     match = GITHUB_REPO_REGEX.search(source)
     if not match:
@@ -59,4 +83,4 @@ def fetch_repository(source: str, dest_dir: Optional[Path] = None) -> Path:
     if not extracted_dirs:
         raise RuntimeError("Falha ao extrair o repositório GitHub.")
 
-    return extracted_dirs[0].resolve()
+    return extracted_dirs[0].resolve(), dest_dir

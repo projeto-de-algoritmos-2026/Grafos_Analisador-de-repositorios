@@ -1,6 +1,6 @@
 import ast
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set
 
 
 def _normalize_module_path(path: Path, root_dir: Path) -> str:
@@ -9,6 +9,13 @@ def _normalize_module_path(path: Path, root_dir: Path) -> str:
     if parts and parts[-1] == "__init__":
         parts = parts[:-1]
     return ".".join(parts)
+
+
+def _is_test_module(path: Path) -> bool:
+    lower_name = path.name.lower()
+    if "tests" in path.parts or "test" in path.parts:
+        return True
+    return lower_name.startswith("test_") or lower_name.endswith("_test.py") or lower_name == "tests.py"
 
 
 def _extract_name(node: ast.AST) -> Optional[str]:
@@ -57,10 +64,20 @@ def _parse_classes(node: ast.AST) -> Set[str]:
     return classes
 
 
-def parse_repository(root_dir: Path) -> Dict[str, Dict[str, List[str]]]:
+def parse_repository(
+    root_dir: Path,
+    status_callback: Optional[Callable[[str], None]] = None,
+) -> Dict[str, Dict[str, List[str]]]:
+    if status_callback:
+        status_callback("[2/4] Analisando arquivos .py...")
+
     root_dir = Path(root_dir).resolve()
     result: Dict[str, Dict[str, List[str]]] = {}
+
     for path in sorted(root_dir.rglob("*.py")):
+        if path.name == "__init__.py" or _is_test_module(path):
+            continue
+
         try:
             text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
@@ -80,4 +97,5 @@ def parse_repository(root_dir: Path) -> Dict[str, Dict[str, List[str]]]:
             "imports": sorted(imports),
             "classes": sorted(classes),
         }
+
     return result
