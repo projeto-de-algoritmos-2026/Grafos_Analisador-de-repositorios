@@ -3,19 +3,38 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Set
 
 
+IGNORED_DIRS = {
+    "tests", "test",
+    "migrations",
+    "examples", "example",
+    "docs", "doc", "documentation",
+    ".git", ".github",
+    "node_modules", "__pycache__",
+    "venv", ".venv", "env",
+    "build", "dist",
+}
+
+IGNORED_FILE_PATTERNS = (
+    "test_", "_test.py", "tests.py",
+    "conftest.py",
+)
+
+
+def _is_ignored_module(path: Path) -> bool:
+    if any(part.lower() in IGNORED_DIRS for part in path.parts):
+        return True
+    lower_name = path.name.lower()
+    if any(lower_name.startswith(p) or lower_name.endswith(p) for p in IGNORED_FILE_PATTERNS):
+        return True
+    return False
+
+
 def _normalize_module_path(path: Path, root_dir: Path) -> str:
     relative = path.relative_to(root_dir)
     parts = list(relative.with_suffix("").parts)
     if parts and parts[-1] == "__init__":
         parts = parts[:-1]
     return ".".join(parts)
-
-
-def _is_test_module(path: Path) -> bool:
-    lower_name = path.name.lower()
-    if "tests" in path.parts or "test" in path.parts:
-        return True
-    return lower_name.startswith("test_") or lower_name.endswith("_test.py") or lower_name == "tests.py"
 
 
 def _extract_name(node: ast.AST) -> Optional[str]:
@@ -75,7 +94,7 @@ def parse_repository(
     result: Dict[str, Dict[str, List[str]]] = {}
 
     for path in sorted(root_dir.rglob("*.py")):
-        if path.name == "__init__.py" or _is_test_module(path):
+        if path.name == "__init__.py" or _is_ignored_module(path):
             continue
 
         try:
