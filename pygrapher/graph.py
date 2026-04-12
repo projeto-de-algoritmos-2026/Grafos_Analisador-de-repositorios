@@ -7,16 +7,20 @@ import networkx as nx
 def _module_name_from_path(path: str) -> str:
     path_obj = Path(path)
     parts = list(path_obj.with_suffix("").parts)
+
     if parts and parts[-1] == "__init__":
         parts = parts[:-1]
+
     return ".".join(parts)
 
 
 def _build_module_index(parsed: Dict[str, Dict[str, List[str]]]) -> Dict[str, str]:
-    index = {}
+    index: Dict[str, str] = {}
+
     for file_path in parsed:
         module_name = _module_name_from_path(file_path)
         index[module_name] = file_path
+
     return index
 
 
@@ -29,6 +33,7 @@ def _find_best_target_file(target: str, module_index: Dict[str, str]) -> Optiona
         prefix = ".".join(parts[:i])
         if prefix in module_index:
             return module_index[prefix]
+
     return None
 
 
@@ -41,6 +46,7 @@ def _classify_import(target: str, module_index: Dict[str, str]) -> str:
         prefix = ".".join(parts[:i])
         if prefix in module_index:
             return "package" if i == len(parts) else "class"
+
     return "class"
 
 
@@ -49,7 +55,7 @@ def build_graph(
     status_callback: Optional[Callable[[str], None]] = None,
 ) -> nx.DiGraph:
     if status_callback:
-        status_callback("[3/4] Construindo grafo...")
+        status_callback("[3/5] Construindo grafo...")
 
     graph = nx.DiGraph()
     module_index = _build_module_index(parsed)
@@ -60,16 +66,25 @@ def build_graph(
     for file_path, metadata in parsed.items():
         for target in metadata.get("imports", []):
             target_file = _find_best_target_file(target, module_index)
+
             if target_file and target_file != file_path:
                 import_kind = _classify_import(target, module_index)
-                graph.add_edge(file_path, target_file, type="import", import_kind=import_kind)
+                graph.add_edge(
+                    file_path,
+                    target_file,
+                    type="import",
+                    import_kind=import_kind,
+                )
 
-    class_definitions = {file_path: metadata.get("classes", []) for file_path, metadata in parsed.items()}
+    class_definitions = {
+        file_path: set(metadata.get("classes", []))
+        for file_path, metadata in parsed.items()
+    }
 
     for file_path, metadata in parsed.items():
-        for base in metadata.get("classes", []):
-            for candidate_path, classes in class_definitions.items():
-                if candidate_path != file_path and base in classes:
+        for base in metadata.get("bases", []):
+            for candidate_path, defined_classes in class_definitions.items():
+                if candidate_path != file_path and base in defined_classes:
                     graph.add_edge(file_path, candidate_path, type="inherits")
                     break
 

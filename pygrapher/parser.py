@@ -24,7 +24,7 @@ def _is_ignored_module(path: Path) -> bool:
     if any(part.lower() in IGNORED_DIRS for part in path.parts):
         return True
     lower_name = path.name.lower()
-    if any(lower_name.startswith(p) or lower_name.endswith(p) for p in IGNORED_FILE_PATTERNS):
+    if any(lower_name.startswith(pattern) or lower_name.endswith(pattern) for pattern in IGNORED_FILE_PATTERNS):
         return True
     return False
 
@@ -55,32 +55,46 @@ def _resolve_import_from(module: Optional[str], level: int, alias: str, current_
 
     parts = current_module.split(".") if current_module else []
     base = parts[: max(0, len(parts) - level)]
+
     if module:
         base.append(module)
+
     if alias and alias != "*":
         base.append(alias)
+
     return ".".join(base)
 
 
 def _parse_imports(node: ast.AST, current_module: str) -> Set[str]:
     imports: Set[str] = set()
+
     if isinstance(node, ast.Import):
         for alias in node.names:
             imports.add(alias.name)
+
     elif isinstance(node, ast.ImportFrom):
         for alias in node.names:
             imports.add(_resolve_import_from(node.module, node.level, alias.name, current_module))
+
     return imports
 
 
-def _parse_classes(node: ast.AST) -> Set[str]:
-    classes: Set[str] = set()
+def _parse_defined_class(node: ast.AST) -> Optional[str]:
+    if isinstance(node, ast.ClassDef):
+        return node.name
+    return None
+
+
+def _parse_class_bases(node: ast.AST) -> Set[str]:
+    bases: Set[str] = set()
+
     if isinstance(node, ast.ClassDef):
         for base in node.bases:
             base_name = _extract_name(base)
             if base_name:
-                classes.add(base_name)
-    return classes
+                bases.add(base_name)
+
+    return bases
 
 
 def parse_repository(
@@ -88,7 +102,7 @@ def parse_repository(
     status_callback: Optional[Callable[[str], None]] = None,
 ) -> Dict[str, Dict[str, List[str]]]:
     if status_callback:
-        status_callback("[2/4] Analisando arquivos .py...")
+        status_callback("[2/5] Analisando arquivos .py...")
 
     root_dir = Path(root_dir).resolve()
     result: Dict[str, Dict[str, List[str]]] = {}
@@ -107,14 +121,22 @@ def parse_repository(
 
         imports: Set[str] = set()
         classes: Set[str] = set()
+        bases: Set[str] = set()
+
         for node in ast.walk(tree):
             imports.update(_parse_imports(node, current_module))
-            classes.update(_parse_classes(node))
+
+            class_name = _parse_defined_class(node)
+            if class_name:
+                classes.add(class_name)
+
+            bases.update(_parse_class_bases(node))
 
         relative_path = path.relative_to(root_dir).as_posix()
         result[relative_path] = {
             "imports": sorted(imports),
             "classes": sorted(classes),
+            "bases": sorted(bases),
         }
 
     return result

@@ -8,6 +8,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from pygrapher.fetcher import cleanup_repository, fetch_repository
 from pygrapher.graph import build_graph
 from pygrapher.parser import parse_repository
+from pygrapher.scc import find_import_sccs
 from pygrapher.visualizer import draw_graph
 
 StatusCallback = Optional[Callable[[str], None]]
@@ -38,7 +39,7 @@ def main() -> int:
         console=console,
         transient=True,
     ) as progress:
-        task_id = progress.add_task("[1/4] Baixando repositório...", total=None)
+        task_id = progress.add_task("[1/5] Baixando repositório...", total=None)
 
         def status_callback(message: str) -> None:
             progress.update(task_id, description=message)
@@ -56,6 +57,7 @@ def main() -> int:
                 return 1
 
             graph = build_graph(parsed, status_callback=status_callback)
+            sccs = find_import_sccs(graph, status_callback=status_callback)
             draw_graph(graph, Path(args.output), mode=args.mode, status_callback=status_callback)
         finally:
             if temp_dir is not None:
@@ -72,6 +74,12 @@ def main() -> int:
         f"[bold blue]Resumo:[/bold blue] {total_nodes} nós, {total_edges} arestas — "
         f"{import_count} imports, {inherit_count} heranças"
     )
+    console.print(f"[bold magenta]SCCs de import com ciclo:[/bold magenta] {len(sccs)}")
+
+    if sccs:
+        for index, component in enumerate(sccs, start=1):
+            console.print(f"[magenta]Ciclo {index}:[/magenta] " + " -> ".join(component))
+
     return 0
 
 
