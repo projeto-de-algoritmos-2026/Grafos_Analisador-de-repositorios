@@ -268,7 +268,7 @@ def _inject_scc_controls(html_path: Path, node_scc_map: dict, node_default_svgs:
         network.body.data.nodes.update(updates);
 
         var legend = document.getElementById("scc-legend");
-        legend.innerHTML = "<div style='font-weight:bold; margin-bottom:10px; color:#111827'>Componentes Conexos (" + SCC_INFO.length + ")</div>";
+        legend.innerHTML = "<div style='font-weight:bold; margin-bottom:10px; color:#111827'>Componentes Fortemente Conectados (" + SCC_INFO.length + ")</div>";
         
         SCC_INFO.forEach(function(scc, i) {{
           var group = document.createElement("div");

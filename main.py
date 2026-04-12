@@ -8,7 +8,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from pygrapher.fetcher import cleanup_repository, fetch_repository
 from pygrapher.graph import build_graph
 from pygrapher.parser import parse_repository
-from pygrapher.scc import find_import_sccs
+from pygrapher.scc import find_import_sccs, kosaraju_scc, build_import_subgraph
 from pygrapher.topological_sort import find_topological_order
 from pygrapher.visualizer import draw_graph
 
@@ -58,7 +58,6 @@ def main() -> int:
                 return 1
 
             graph = build_graph(parsed, status_callback=status_callback)
-            from pygrapher.scc import kosaraju_scc, build_import_subgraph
             sccs = find_import_sccs(graph, status_callback=status_callback)
             import_graph = build_import_subgraph(graph)
             all_sccs = kosaraju_scc(import_graph)
@@ -88,7 +87,7 @@ def main() -> int:
         f"[bold blue]Resumo:[/bold blue] {total_nodes} nós, {total_edges} arestas — "
         f"{import_count} imports, {inherit_count} heranças"
     )
-    console.print(f"[bold magenta]SCCs de import com ciclo:[/bold magenta] {len(sccs)}")
+    console.print(f"[bold magenta]Ciclos de import detectados:[/bold magenta] {len(sccs)}")
 
     if sccs:
         all_nodes = sorted(graph.nodes())
