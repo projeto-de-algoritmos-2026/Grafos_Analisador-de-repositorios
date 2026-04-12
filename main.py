@@ -9,6 +9,7 @@ from pygrapher.fetcher import cleanup_repository, fetch_repository
 from pygrapher.graph import build_graph
 from pygrapher.parser import parse_repository
 from pygrapher.scc import find_import_sccs
+from pygrapher.topological_sort import find_topological_order
 from pygrapher.visualizer import draw_graph
 
 StatusCallback = Optional[Callable[[str], None]]
@@ -26,7 +27,7 @@ def main() -> int:
         "--mode",
         choices=["imports", "packages", "package", "class-imports", "class_imports", "classes", "full"],
         default="imports",
-        help="Modo de visualização do grafo: imports, packages, package, class-imports, class_imports, classes ou full",
+        help="Modo de visualização do grafo",
     )
     args = parser.parse_args()
 
@@ -57,8 +58,21 @@ def main() -> int:
                 return 1
 
             graph = build_graph(parsed, status_callback=status_callback)
+            from pygrapher.scc import kosaraju_scc, build_import_subgraph
             sccs = find_import_sccs(graph, status_callback=status_callback)
-            draw_graph(graph, Path(args.output), mode=args.mode, status_callback=status_callback)
+            import_graph = build_import_subgraph(graph)
+            all_sccs = kosaraju_scc(import_graph)
+            all_nodes = sorted(graph.nodes())
+            node_num = {node: i + 1 for i, node in enumerate(all_nodes)}
+            topo_order = find_topological_order(import_graph, all_sccs, node_num, status_callback=status_callback)
+            draw_graph(
+                graph,
+                Path(args.output),
+                mode=args.mode,
+                sccs=all_sccs,
+                topo_order=topo_order,
+                status_callback=status_callback,
+            )
         finally:
             if temp_dir is not None:
                 cleanup_repository(temp_dir)
@@ -77,8 +91,21 @@ def main() -> int:
     console.print(f"[bold magenta]SCCs de import com ciclo:[/bold magenta] {len(sccs)}")
 
     if sccs:
+        all_nodes = sorted(graph.nodes())
+        node_num = {node: i + 1 for i, node in enumerate(all_nodes)}
         for index, component in enumerate(sccs, start=1):
-            console.print(f"[magenta]Ciclo {index}:[/magenta] " + " -> ".join(component))
+            nums = sorted([node_num[n] for n in component])
+            num_str = ", ".join(str(n) for n in nums)
+            files_str = " -> ".join(Path(n).name for n in component)
+            console.print(f"[magenta]Ciclo {index} (nós: {num_str}):[/magenta] {files_str}")
+
+    console.print()
+    console.print(f"[bold cyan]Ordenação Topológica (grafo condensado):[/bold cyan]")
+    for item in topo_order:
+        nums_str = ", ".join(str(n) for n in item["nums"])
+        names_str = ", ".join(item["nodes"])
+        layer_str = f"camada {item['layer']}"
+        console.print(f"  [cyan]{item['order']:>3}.[/cyan] [{layer_str}] nós ({nums_str}) — {names_str}")
 
     return 0
 
