@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, Set
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import networkx as nx
 
@@ -24,24 +24,33 @@ def reverse_graph(graph: nx.DiGraph) -> nx.DiGraph:
     return reversed_g
 
 
-def dfs_post_order(graph: nx.DiGraph) -> List[str]:
+def dfs_with_times(graph: nx.DiGraph) -> Tuple[Dict[str, int], Dict[str, int], List[str]]:
     visited: Set[str] = set()
+    pre: Dict[str, int] = {}
+    post: Dict[str, int] = {}
     post_order: List[str] = []
+    time = 1
 
     def visit(vertex: str) -> None:
+        nonlocal time
+
         visited.add(vertex)
+        pre[vertex] = time
+        time += 1
 
         for neighbor in graph.successors(vertex):
             if neighbor not in visited:
                 visit(neighbor)
 
+        post[vertex] = time
+        time += 1
         post_order.append(vertex)
 
     for vertex in graph.nodes():
         if vertex not in visited:
             visit(vertex)
 
-    return post_order
+    return pre, post, post_order
 
 
 def collect_component(
@@ -59,13 +68,19 @@ def collect_component(
 
 
 def kosaraju_scc(graph: nx.DiGraph) -> List[List[str]]:
-    post_order = dfs_post_order(graph)
+    _, post, _ = dfs_with_times(graph)
     reversed_g = reverse_graph(graph)
 
     visited: Set[str] = set()
     components: List[List[str]] = []
 
-    for vertex in reversed(post_order):
+    ordered_vertices = sorted(
+        graph.nodes(),
+        key=lambda vertex: post[vertex],
+        reverse=True,
+    )
+
+    for vertex in ordered_vertices:
         if vertex not in visited:
             component: List[str] = []
             collect_component(reversed_g, vertex, visited, component)
