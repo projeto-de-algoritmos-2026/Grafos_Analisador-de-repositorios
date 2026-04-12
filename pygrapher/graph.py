@@ -55,7 +55,7 @@ def build_graph(
     status_callback: Optional[Callable[[str], None]] = None,
 ) -> nx.DiGraph:
     if status_callback:
-        status_callback("[3/5] Construindo grafo...")
+        status_callback("[3/6] Construindo grafo...")
 
     graph = nx.DiGraph()
     module_index = _build_module_index(parsed)

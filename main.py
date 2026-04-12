@@ -40,7 +40,7 @@ def main() -> int:
         console=console,
         transient=True,
     ) as progress:
-        task_id = progress.add_task("[1/5] Baixando repositório...", total=None)
+        task_id = progress.add_task("[1/6] Baixando repositório...", total=None)
 
         def status_callback(message: str) -> None:
             progress.update(task_id, description=message)

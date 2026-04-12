@@ -49,7 +49,7 @@ def fetch_repository(
 ) -> Tuple[Path, Optional[Path]]:
     """Fetch a GitHub repository zip or return a local directory path."""
     if status_callback:
-        status_callback("[1/4] Baixando repositório...")
+        status_callback("[1/6] Baixando repositório...")
 
     if dest_dir is None:
         _cleanup_old_temporary_repos()

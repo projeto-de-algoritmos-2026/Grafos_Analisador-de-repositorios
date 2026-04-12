@@ -102,7 +102,7 @@ def parse_repository(
     status_callback: Optional[Callable[[str], None]] = None,
 ) -> Dict[str, Dict[str, List[str]]]:
     if status_callback:
-        status_callback("[2/5] Analisando arquivos .py...")
+        status_callback("[2/6] Analisando arquivos .py...")
 
     root_dir = Path(root_dir).resolve()
     result: Dict[str, Dict[str, List[str]]] = {}

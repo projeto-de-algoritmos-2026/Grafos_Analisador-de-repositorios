@@ -370,7 +370,7 @@ def draw_graph(
     status_callback: Optional[Callable[[str], None]] = None,
 ) -> None:
     if status_callback:
-        status_callback("[5/5] Gerando visualização interativa...")
+        status_callback("[6/6] Gerando visualização interativa...")
 
     mode_aliases = {
         "package": "packages",

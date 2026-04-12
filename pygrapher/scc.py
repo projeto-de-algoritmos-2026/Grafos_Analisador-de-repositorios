@@ -94,7 +94,7 @@ def find_import_sccs(
     status_callback: Optional[Callable[[str], None]] = None,
 ) -> List[List[str]]:
     if status_callback:
-        status_callback("[4/5] Detectando SCCs de import...")
+        status_callback("[4/6] Detectando SCCs de import...")
 
     import_graph = build_import_subgraph(graph)
     components = kosaraju_scc(import_graph)

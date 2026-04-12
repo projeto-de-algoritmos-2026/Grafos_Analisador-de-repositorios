@@ -40,7 +40,7 @@ def topological_sort_sccs(
     Retorna lista de índices de SCCs em ordem topológica.
     """
     if status_callback:
-        status_callback("[5/5] Calculando ordenação topológica...")
+        status_callback("[5/6] Calculando ordenação topológica...")
 
     condensed, _ = build_condensed_graph(graph, sccs)
     order = list(nx.topological_sort(condensed))
@@ -80,7 +80,7 @@ def find_topological_order(
     Cada item: { order, scc_idx, nodes, nums, layer }
     """
     if status_callback:
-        status_callback("[5/5] Calculando ordenação topológica...")
+        status_callback("[5/6] Calculando ordenação topológica...")
 
     topo_order = topological_sort_sccs(sccs, graph)
     layers = compute_topo_layers(sccs, graph)
