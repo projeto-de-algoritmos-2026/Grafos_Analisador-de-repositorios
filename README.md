@@ -17,12 +17,22 @@ Seu funcionamento ocorre em etapas. Inicialmente, o sistema percorre os arquivos
 ## Screenshots
 A seguir estão imagens do projeto em funcionamento.
 
+- Resultado da execução do comando:
+```bash
+python main.py --repo https://github.com/pallets/click
+```
 ![alt text](image-3.png)
 
+- Grafo gerado:
 ![alt text](image.png)
 
+- Grafo Iterativo, é possível ver quantas arestas se conectam e qual arquivo aquele nó representa.
+![alt text](image-4.png)
+
+- SCCs identificadas e coloridas.
 ![alt text](image-1.png)
 
+- Ordenação topológica feita.
 ![alt text](image-2.png)
 
 ## Instalação
@@ -77,4 +87,7 @@ python main.py --repo https://github.com/pallets/click --mode classes
 Após a execução do comando e gerar o html, haverá dois botões no canto direito superior da tela.
 - Ver SCCs (classifica os componentes fortemente conectados do grafo apresentado, em diferentes cores, identificando cada um)
 - Ver Topologia (coloca em ordem de graus de saída/entrada, de acordo com os componentes fortemente conectados gerados)
+
+## Vídeo de Apresentação
+Link para o vídeo de apresentação e demonstração do trabalho:  
 
