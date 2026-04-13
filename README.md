@@ -78,5 +78,3 @@ Após a execução do comando e gerar o html, haverá dois botões no canto dire
 - Ver SCCs (classifica os componentes fortemente conectados do grafo apresentado, em diferentes cores, identificando cada um)
 - Ver Topologia (coloca em ordem de graus de saída/entrada, de acordo com os componentes fortemente conectados gerados)
 
-## Outros 
-Quaisquer outras informações sobre seu projeto podem ser descritas abaixo.
