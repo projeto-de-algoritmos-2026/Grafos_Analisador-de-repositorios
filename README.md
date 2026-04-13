@@ -17,7 +17,13 @@ Seu funcionamento ocorre em etapas. Inicialmente, o sistema percorre os arquivos
 ## Screenshots
 A seguir estão imagens do projeto em funcionamento.
 
+![alt text](image-3.png)
 
+![alt text](image.png)
+
+![alt text](image-1.png)
+
+![alt text](image-2.png)
 
 ## Instalação
 **Linguagem**: Python<br>
@@ -41,7 +47,7 @@ python main.py --repo URL
 
 Exemplo:
 ```bash
-python main.py --repo https://github.com/tornadoweb/tornado
+python main.py --repo https://github.com/pallets/click
 ```
 > Esse comando analisa o repositório informado, constrói o grafo de dependências e gera o arquivo `dependency_graph.html`.
 
@@ -59,7 +65,7 @@ Para adicionar o modo, basta digitar o **nome do modo na frente do comando**.
 
 Exemplo:
 ```bash
-python main.py --repo https://github.com/tornadoweb/tornado --mode classes
+python main.py --repo https://github.com/pallets/click --mode classes
 ```
 
 **Observações**
@@ -68,7 +74,9 @@ python main.py --repo https://github.com/tornadoweb/tornado --mode classes
 - Se `python` não estiver disponível no seu terminal, use `python3` nos comandos acima.
 
 ## Uso 
-Explique como usar seu projeto caso haja algum passo a passo após o comando de execução.
+Após a execução do comando e gerar o html, haverá dois botões no canto direito superior da tela.
+- Ver SCCs (classifica os componentes fortemente conectados do grafo apresentado, em diferentes cores, identificando cada um)
+- Ver Topologia (coloca em ordem de graus de saída/entrada, de acordo com os componentes fortemente conectados gerados)
 
 ## Outros 
 Quaisquer outras informações sobre seu projeto podem ser descritas abaixo.
